@@ -1,0 +1,52 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main  # 或者你想要触发部署的其他分支
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main  # 或者你想要触发部署的其他分支
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - name: Checkout GitHub Action
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_BUSH_08F676A00 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # 这个是 GitHub 自动生成的 token
+          action: 'upload'
+          app_location: '/' # Next.js 项目的根目录
+          output_location: '.next' # Next.js 构建输出目录
+          api_location: 'api' # 如果你有 API 目录
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_BUSH_08F676A00 }}
+          action: "close"
